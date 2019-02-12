@@ -1,0 +1,30 @@
+Mood data has been collected via iMoodJournal android app from Sept 5, 2015 onward.
+Data has been exported directly from the app to iMoodJournal.csv.
+
+Mood is recorded on an arbitrary scale from 1 to 10 with 1 being worst and 10 being 
+best. Data recording include choosing a mood level number and, optionally, including
+a picutre and/or text comment. Text comments support the use of hashtags (#) to easily
+search for specific triggers or events that might be related to mood. I have used these
+primarily to mark start/stop/dose change dates for my medication with the #wellbutrin tag.
+
+[1] Date
+[2] Day of Week
+[3] Hour
+[4] Minute
+[5] Level
+	Reported mood level (1-10) at given date and time.
+[6] LevelText
+	Associated label for level number:
+		(1) Couldn't be worse
+		(2) Very Bad
+		(3) Bad
+		(4) Blah
+		(5) Meh
+		(6) Okay
+		(7) Pretty Good
+		(8) Good
+		(9) Great
+		(10) Awesome
+[7] Comment
+	Any text comment that was logged at the time of mood recording.
+[8]-[220] True-False values indicating the presence of a given hashtag within the comment.
