@@ -3,7 +3,7 @@ library(dplyr)
 library(stringr)
 library(ggplot2)
 
-setwd("C:/Users/Sarah/Documents/DataScience/Seasonal Affective")
+setwd("C:/Users/Sarah/Documents/DataScience/SeasonalAffective")
 
 #Read in Weather data
 #Data can be acquired from https://www7.ncdc.noaa.gov/CDO/cdoselect.cmd?datasetabbv=GSOD&countryabbv&georegionabbv
@@ -20,6 +20,7 @@ widths<-c(-14,8,-4,4,-73,5,-4,4,-3,4,-9,6)
 cnames<-c("Date","AvgTemp", "High", "Low", "Prcp", "FRSHTT")
 weather<-read.fwf("tempdata.txt",widths=widths,na.strings=c(999.9,9999.9),skip=1, col.names=cnames)
 weather$Date<-ymd(weather$Date)
+weather<-weather[5:1242,] #Drop first four days of September, since I started taking mood data on Sept 5.
 
 #Read in Mood data
 cat("Reading mood data...\n")
@@ -74,86 +75,8 @@ merge(moods, weather, by="Date", all=TRUE) %>%
     select(Date, Level, High, Wellbutrin, Prcp, Comment, AvgTemp, Low, FRSHTT) -> data
 
 
-#Plot some shit
-cat("Plotting...\n")
-g<-ggplot(data)
+model1 <- lm(Level~High,data)
+model2 <- lm(Level~High+Prcp,data)
+model3 <- lm(Level~High+Wellbutrin+Prcp,data)
 
-# g +
-#     theme_light(base_family="serif") +
-#     theme(plot.title = element_text(hjust = 0.5)) +
-#     geom_point(aes(Date,Prcp, color = "Precipitation"), 
-#                 shape = 20, 
-#                 alpha = 1/2
-#                 ) +
-#     geom_smooth(mapping=aes(Date, Prcp, color = "Precipitation"),
-#                 se    = FALSE
-#                 ) +
-#     geom_point(aes(Date, (Level/10 - .25), color = "Mood"), 
-#                 shape = 20, 
-#                 alpha = 1/2
-#                 ) +
-#     geom_smooth(mapping=aes(Date, (Level/10 - .25), color = "Mood"),
-#                 se    = FALSE
-#                 ) +
-#     geom_point(aes(Date, .1, color= "Fog"),
-#                 data = subset(data, FRSHTT>=100000),
-#                 shape=17,
-#                 ) +
-#     ylim(0,.75) +
-#     ylab("Precipitation (in)") +
-#     ggtitle("Precipitation and Mood") +
-#     scale_colour_manual( name   = "",
-#                          values = c(Precipitation = "cadetblue", 
-#                                     Mood = "grey47",
-#                                     Fog = "seagreen"
-#                                     )
-#                         )
-
-
-# g +
-#     theme_light(base_family="serif") +
-#     theme(plot.title = element_text(hjust = 0.5)) +
-#     geom_point(aes(Date,High, color = "HighTemp"), 
-#                 shape = 20, 
-#                 alpha = 1/2
-#                 ) +
-#     geom_smooth(mapping=aes(Date, High, color = "HighTemp"),
-#                 se    = FALSE
-#                 ) +
-#     geom_point(aes(Date, (Level*8+60), color = "Mood"), 
-#                 shape = 20, 
-#                 alpha = 1/2
-#                 ) +
-#     geom_smooth(mapping=aes(Date, (Level*8+60), color = "Mood"),
-#                 se    = FALSE
-#                 ) +
-#     ylab("Temperature (F)") +
-#     ggtitle("Temperature and Mood") +
-#     scale_colour_manual( name   = "",
-#                          values = c(HighTemp = "indianred", 
-#                                     Mood="grey47"
-#                                     )
-#                         )
-
-g +
-    theme_light(base_family="serif") +
-    theme(plot.title = element_text(hjust = 0.5)) +
-    geom_point(aes(Date,Wellbutrin, color = "Antidepressant"), 
-                shape = 20, 
-                alpha = 1/2
-                ) +
-    geom_point(aes(Date, (Level-5.5)*150, color = "Mood"), 
-                shape = 20, 
-                alpha = 1/2
-                ) +
-    geom_smooth(mapping=aes(Date, (Level-5.5)*150, color = "Mood"),
-                se    = FALSE
-                ) +
-    ylab("Dose (mg)") +
-    ggtitle("Medication and Mood") +
-    scale_colour_manual( name   = "",
-                         values = c(Antidepressant = "darkorchid", 
-                                    Mood="grey47"
-                                    )
-                        )
-
+anova(model1,model2,model3)
