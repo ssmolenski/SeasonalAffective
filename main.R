@@ -24,9 +24,9 @@ weather<-weather[5:1242,] #Drop first four days of September, since I started ta
 
 #Read in Mood data
 cat("Reading mood data...\n")
-read.csv("iMoodJournal.csv", stringsAsFactors=FALSE) %>%
+read.csv("iMoodJournal.csv", stringsAsFactors=FALSE,fileEncoding="UTF-8-BOM") %>%
         select(c(1,5,214,7)) %>% 
-        rename(Date="ï..Date", Wellbutrin=wellbutrin) -> moods
+        rename(Wellbutrin=wellbutrin) -> moods
 moods$Date<-as.Date(moods$Date,"%B %d, %Y")
 
 #Wellbutrin column only gives which days are tagged with "Wellbutrin". I want to extract the dose information for each day:
@@ -91,5 +91,5 @@ plot(model3, which=1)
 plot(model4, which=1)
 plot(model5, which=1) #Terrible fit
 
-g<-ggplot(data)
+g <- ggplot(data)
 g + geom_point(aes(High,Level,color=Wellbutrin)) + geom_smooth(method="lm", mapping=aes(High,Level))

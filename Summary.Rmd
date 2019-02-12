@@ -1,0 +1,135 @@
+---
+title: "Seasonal Affective Disorder and Weather Patterns"
+author: "S Smolenski"
+---
+
+# Introduction
+
+Seasonal Affective Disorder is a type of episodic depression, wherein the person's mood is contingent upon local weather. Most commonly, this manifests in wetter climates, which receive high levels of precipitation in the cooler months: a personal with this traditional Seasonal Affective Disorder will become depressed during the colder months. This type of Seasonal Affective Disorder can be successfully treated with more antidepressants and ultraviolet lamps to simulate the sunshine that is so frequently absent during the relevant time of year. A second, less common, form of Seasonal Affective disorder exists during the opposite months; those who have this type become depressed during the hotter summer months.
+
+I was diagnosed with Summer Seasonal Affective Disorder in the summer of 2015. Thereafter, I began recording my mood with the iMoodJournal android app to observe the patterns of depression and anxiety that I experience during the summer months. 
+
+This report summarizes my findings as I compare my self-recorded mood data, including information from my medication dosage, to local weather data.
+
+# Data
+
+## Acquisition
+
+```{r, echo=FALSE}
+library(lubridate)
+library(dplyr)
+library(stringr)
+library(ggplot2)
+```
+
+Climate data are downloaded from the US [National Climate Data Center](https://www7.ncdc.noaa.gov/CDO/cdoselect.cmd?datasetabbv=GSOD&countryabbv&georegionabbv). I isolate only the weather from the station closest to my residence from September 1, 2015 onward. The data file, as downloaded from the NCDC website, can be found in the github repository for this project.
+
+Mood data has been uploaded via iMoodJournal android app. The raw data, as exported by the app, are available in github repository.
+
+For more detailed information on the datasets, please consult the respective codebook (available in the github repository).
+
+## Cleaning
+
+I do not keep the entire NCDC file, but instead import only the data that are of interest to me: date, average temperature, recorded high, recorded low, inches of precipitation, and code, and a code indicating fog/rain/sleet/hail/thunder/tornado. I also drop the first four records, as these correspond to September 1-4, for which I have no mood data recorded.
+
+```{r}
+widths<-c(-14, 8, -4, 4, -73, 5, -4, 4, -3, 4, -9, 6)
+cnames<-c("Date", "AvgTemp", "High", "Low", "Prcp", "FRSHTT")
+weather<-read.fwf("tempdata.txt",
+                    widths=widths,
+                    na.strings=c(999.9,9999.9),
+                    skip=1, 
+                    col.names=cnames)
+weather$Date<-ymd(weather$Date)
+weather<-weather[5:1242, ]
+```
+
+From my mood data, I isolate the date, mood level (an integer from 1-10 indicating bad-good mood, respectively), the medication tag, and text comments:
+
+```{r}
+read.csv("iMoodJournal.csv", 
+            stringsAsFactors=FALSE,
+            fileEncoding="UTF-8-BOM") %>%
+        select(c(1,5,214,7)) %>% 
+        rename(Wellbutrin=wellbutrin) -> moods
+moods$Date<-as.Date(moods$Date,"%B %d, %Y")
+```
+
+### Medication
+
+During the summer of 2017 I began taking Bupropion (Wellbutrin), beginning with a dose of 100mg/day. From then until now, the dose has been varied throughout the cycle of the year, peaking at 300mg/day during the summer and dropping to 0 or 50 mg/day during the winter. I tagged start/stop/dose change days with #Wellbutrin in iMoodJournal, along with the dose. These tags are represented in the data by a 1 in the Wellbutrin column if #Wellbutrin was present in the comment for that day. Furthermore, I can access the dose by viewing the comment for a particular day.
+
+More useful would be a column indicating what my dosage of Wellbutrin was on a given day. I accomplish this as follows:
+
+```{r}
+meds<- which(moods$Wellbutrin==1,arr.ind=TRUE)
+meddates<- as.Date(moods$Date[meds])
+dose<-integer(0)
+for (i in 1:length(meds)){
+    index<-meds[i]
+    str<- moods$Comment[index]
+    dose<-as.numeric(c(dose,str_extract(str,"[[:digit:]]+")))
+}
+dose[2]<-0
+for (i in 0:(length(meds))){
+    if(i==0){
+        WellbutrinDose<-rep(0,(meds[1]-1))
+    }else if (i==length(meds)) {
+        n<-(length(moods$Wellbutrin) - meds[i]+1)
+        WellbutrinDose<- c(WellbutrinDose, rep(dose[i], n ))
+    }else{
+        n<- meds[i+1] - meds[i]
+        WellbutrinDose<- c(WellbutrinDose, rep(dose[i], n ))
+    }
+}
+```
+
+I have manually included one stop date, where the comment on that date did not follow the pattern for the others (ie, comment reads "stopped #Wellbutrin" rather than "#Wellbutrin 0mg). Later dates have more consistent tagging schemes, so this is the only date I input manually.
+
+### Missing Data
+
+During fall of 2017, I neglected to record the exact dates and values of my first attempt to taper off medication. As such, I fill in estimates of dates and doses. These filled in values have the correct doses, but the dates may be off anywhere on the order of days to weeks. For my purposes, this uncertainty is acceptable. 
+
+```{r}
+WellbutrinDose[1135:1189] <- 100
+WellbutrinDose[1190:1243] <- 150
+WellbutrinDose[1244:1430] <- 200
+WellbutrinDose[1430:1484] <- 100
+WellbutrinDose[1485:1541] <- 200
+WellbutrinDose[1542:1562] <- 100
+WellbutrinDose[1563:1574] <- 50
+moods$Wellbutrin<-WellbutrinDose
+```
+
+## Cleaned Data
+
+The cleaned and combined data can be summarized as follows:
+
+```{r, echo=FALSE}
+merge(moods, weather, by="Date", all=TRUE) %>%
+    select(Date, 
+            Level, 
+            High, 
+            Wellbutrin, 
+            Prcp, 
+            Comment, 
+            AvgTemp, 
+            Low, 
+            FRSHTT) -> data
+```
+
+```{r}
+head(data)
+```
+
+```{r}
+str(data)
+```
+
+```{r}
+summary(data)
+```
+
+# Model Building
+
+I hypothesize that mood level depends on temperature, precipitation, and medication dosage. I explore a few multivariable linear regression models in detail.
