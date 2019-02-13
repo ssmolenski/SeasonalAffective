@@ -133,3 +133,100 @@ summary(data)
 # Model Building
 
 I hypothesize that mood level depends on temperature, precipitation, and medication dosage. I explore a few multivariable linear regression models in detail.
+
+```{r}
+model1 <- lm(Level~High,data)
+model2 <- lm(Level~High+Prcp,data)
+model3 <- lm(Level~High+Wellbutrin+Prcp,data)
+model4 <- lm(Level~High+Wellbutrin,data) 
+model5 <- lm(Level~Prcp+Wellbutrin,data)
+model6 <- lm(Level~AvgTemp,data)
+model7 <- lm(Level~AvgTemp+Prcp,data)
+model8 <- lm(Level~AvgTemp+Wellbutrin+Prcp,data)
+model9 <- lm(Level~AvgTemp+Wellbutrin,data) 
+model10 <- lm(Level~Low,data)
+model11 <- lm(Level~Low+Prcp,data)
+model12 <- lm(Level~Low+Wellbutrin+Prcp,data)
+model13 <- lm(Level~Low+Wellbutrin,data) 
+
+```
+I avoid using any of the temperature variables (High, AvgTemp, Low) in combination in any one model, since they are highly correlated variables and I want to avoid confounding and reduce error.
+
+Taking a look at the models individually: 
+
+```{r}
+summary(model1)
+```
+
+```{r}
+summary(model2)
+```
+
+```{r}
+summary(model3)
+```
+
+```{r}
+summary(model4)
+```
+
+```{r}
+summary(model5)
+```
+
+```{r}
+summary(model6)
+```
+
+```{r}
+summary(model7)
+```
+
+```{r}
+summary(model8)
+```
+
+```{r}
+summary(model9)
+```
+
+```{r}
+summary(model10)
+```
+
+```{r}
+summary(model11)
+```
+
+```{r}
+summary(model12)
+```
+
+```{r}
+summary(model13)
+```
+
+We note a strange trend that precipitation seems to be negatively correlated with mood, which is the opposite of my (subjective) personal experience. However, the p values are very high for Prcp coefficients in every model. This implies to me that the precipitation data is so scarce that a solid relationship cannot be drawn between mood and precipitation. For this reason, I will discard the models which include precipitation as a predictor, at least until more data can be gathered.
+
+It seems clear, based on the low p and high t value for models including Wellbutrin, that this *is* an important predictor, and so we are left to determine which of the temperature variables is the strongest predictor of mood. Comparing models 4, 9, and 13, while High, Low, and AvgTemp all seem to predict mood fairly well, High has a marginally higher t value than either of the others. Thus, model 4 seems to be the best fit for the data.
+
+I take a look at the residual plots to get a secondary measure of how good a fit model4 actually is for the data.
+
+```{r, echo=FALSE}
+par(mfrow=c(2,2))
+plot(model4, pch='.')
+```
+
+Here, the Q-Q plot looks satisfactory, but the residual plots clearly display some sort of pattern. This implies to me that, while the high temperature and medication dosage may be the best predictors for mood, the relationship is either non-linear in one or both variables, or there may be some other variable(s), which affect mood. I do expect a large variance in the data, but the patterns should not be present in the residual plots.
+
+I consider two possible solutions for this below.
+
+## Non-Linear Regression
+
+## Missing predictor
+
+This problem is less technically complicated, but more difficult to deal with. Of course, it will not be possible to account for the myriad variables that could possibly affect my mood. Some potential predictors I have discarded before this analysis: for instance, the iMoodJournal app displays *Mood vs Time of Day* and *Mood vs Day of Week* plots in-app. My data show no apparent correlation between mood and either of these variables. 
+
+One variable, which I have not accounted for here, but could be viable to include in the future is the hormone levels (namely, estrogen and progesterone) associated with the natural menstrual cycle. Premenstrual Dysphoric Disorder (PMDD) is a disorder which can cause depression and anxiety in the weeks preceding menstruation. While I have noticed an increase in depressive symptoms during the relevant weeks, this is merely a qualitative hypothesis as this point. I do, however, have enough data collected from manstrual cycles that I may be able to include hormone level as a predictor in a future version of this model.
+
+

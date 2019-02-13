@@ -80,16 +80,24 @@ model2 <- lm(Level~High+Prcp,data)
 model3 <- lm(Level~High+Wellbutrin+Prcp,data) #3 and 4 produce same High-Level relation
 model4 <- lm(Level~High+Wellbutrin,data) 
 model5 <- lm(Level~Prcp+Wellbutrin,data) #Bad
+model6 <- lm(Level~AvgTemp,data)
+model7 <- lm(Level~AvgTemp+Prcp,data)
+model8 <- lm(Level~AvgTemp+Wellbutrin+Prcp,data)
+model9 <- lm(Level~AvgTemp+Wellbutrin,data) 
+model10 <- lm(Level~Low,data)
+model11 <- lm(Level~Low+Prcp,data)
+model12 <- lm(Level~Low+Wellbutrin+Prcp,data)
+model13 <- lm(Level~Low+Wellbutrin,data) 
 
 anova(model1,model2,model3)
 
 #residual plots
-par(mfrow=c(3,2))
-plot(model1, which=1)
-plot(model2, which=1)
-plot(model3, which=1)
-plot(model4, which=1)
-plot(model5, which=1) #Terrible fit
+# par(mfrow=c(3,2))
+# plot(model1, which=1)
+# plot(model2, which=1)
+# plot(model3, which=1)
+# plot(model4, which=1)
+# plot(model5, which=1) #Terrible fit
 
-g <- ggplot(data)
-g + geom_point(aes(High,Level,color=Wellbutrin)) + geom_smooth(method="lm", mapping=aes(High,Level))
+# g <- ggplot(data)
+# g + geom_point(aes(High,Level,color=Wellbutrin)) + geom_smooth(method="lm", mapping=aes(High,Level))
